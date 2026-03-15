@@ -13,7 +13,7 @@ env:
 jobs:
 
   # ── 1. Backend Tests ──────────────────────────────────────────────────────
-  backend-test:
+ backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
     steps:
@@ -25,24 +25,16 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('backend/**/*.gradle*', 'backend/**/gradle-wrapper.properties') }}
-          restore-keys: gradle-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: "8.5"
-      - name: Fix gradlew permissions
-        run: chmod +x backend/gradlew
+      - name: Install Gradle 8.5
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip -P /tmp
+          unzip -q /tmp/gradle-8.5-bin.zip -d /opt/gradle
+          echo "/opt/gradle/gradle-8.5/bin" >> $GITHUB_PATH
+
       - name: Run backend tests
         run: |
           cd backend
-          ./gradlew test --no-daemon
+          gradle test --no-daemon
 
   # ── 2. Frontend Build & Test ──────────────────────────────────────────────
   frontend-build:
