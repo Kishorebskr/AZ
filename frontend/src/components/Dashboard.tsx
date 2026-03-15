@@ -28,7 +28,7 @@ function Dashboard() {
   useEffect(() => {
     if (!autoRefresh) return
 
-    const interval = setInterval(() => {
+    const_interval = setInterval(() => {
       setLoading(true)
       fetchTeamStats(selectedTeam).then(data => {
         setStats(data)
