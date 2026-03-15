@@ -34,9 +34,9 @@ function Dashboard() {
         setStats(data)
         setLoading(false)
       })
-    }, 10000)
+    }, 10000)  */
 
-  }, [autoRefresh, selectedTeam])  */
+  }, [autoRefresh, selectedTeam])  
 
   const handleTeamChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newTeam = event.target.value
