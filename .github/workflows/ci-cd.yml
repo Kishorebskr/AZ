@@ -3,17 +3,15 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main      # triggers prod deploy
-      - develop   # triggers dev deploy
+      - main
+      - develop
 
 env:
-  REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
 
 jobs:
 
-  # ── 1. Backend Tests ──────────────────────────────────────────────────────
- backend-test:
+  backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
     steps:
@@ -36,7 +34,6 @@ jobs:
           cd backend
           gradle test --no-daemon
 
-  # ── 2. Frontend Build & Test ──────────────────────────────────────────────
   frontend-build:
     name: Frontend Build
     runs-on: ubuntu-latest
@@ -60,18 +57,13 @@ jobs:
           cd frontend
           npm run build
 
-  # ── 3. Build & Push Docker Images ────────────────────────────────────────
   build-and-push:
-    name: Build & Push Images
+    name: Build and Push Images
     needs: [backend-test, frontend-build]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tag }}
-
     steps:
       - uses: actions/checkout@v4
 
@@ -94,7 +86,7 @@ jobs:
             echo "extra_tag=dev-${SHORT_SHA}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build & push backend image
+      - name: Build and push backend image
         run: |
           docker build -t ${{ env.IMAGE_PREFIX }}/backend:${{ steps.meta.outputs.tag }} \
                        -t ${{ env.IMAGE_PREFIX }}/backend:${{ steps.meta.outputs.extra_tag }} \
@@ -102,7 +94,7 @@ jobs:
           docker push ${{ env.IMAGE_PREFIX }}/backend:${{ steps.meta.outputs.tag }}
           docker push ${{ env.IMAGE_PREFIX }}/backend:${{ steps.meta.outputs.extra_tag }}
 
-      - name: Build & push frontend image
+      - name: Build and push frontend image
         run: |
           docker build -t ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.meta.outputs.tag }} \
                        -t ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.meta.outputs.extra_tag }} \
@@ -110,14 +102,12 @@ jobs:
           docker push ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.meta.outputs.tag }}
           docker push ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.meta.outputs.extra_tag }}
 
-  # ── 4. Deploy to Dev (develop branch) ────────────────────────────────────
   deploy-dev:
     name: Deploy to Dev
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref_name == 'develop'
     environment: dev
-
     steps:
       - uses: actions/checkout@v4
 
@@ -138,14 +128,12 @@ jobs:
           kubectl rollout status deployment/backend -n dev --timeout=120s
           kubectl rollout status deployment/frontend -n dev --timeout=120s
 
-  # ── 5. Deploy to Prod (main branch) ──────────────────────────────────────
   deploy-prod:
     name: Deploy to Prod
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref_name == 'main'
     environment: prod
-
     steps:
       - uses: actions/checkout@v4
 
