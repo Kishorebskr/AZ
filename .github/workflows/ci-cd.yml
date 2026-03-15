@@ -33,6 +33,10 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ hashFiles('backend/**/*.gradle*', 'backend/**/gradle-wrapper.properties') }}
           restore-keys: gradle-
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.5"
       - name: Fix gradlew permissions
         run: chmod +x backend/gradlew
       - name: Run backend tests
