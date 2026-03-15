@@ -1,0 +1,38 @@
+# Node
+node_modules/
+node-compile-cache/
+dist/
+.npm/
+frontend/.env
+
+# Java / Gradle
+.gradle/
+build/
+*.class
+*.jar
+*.war
+!gradle/wrapper/gradle-wrapper.jar
+
+# Python / uv
+__pycache__/
+*.pyc
+uv-*.lock
+.venv/
+
+# PhantomJS / binaries
+phantomjs/
+*.tar.bz2
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.kubeconfig
+kubeconfig
+.env
