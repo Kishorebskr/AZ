@@ -28,7 +28,7 @@ function Dashboard() {
   useEffect(() => {
     if (!autoRefresh) return
 
-    const _interval = setInterval(() => {
+/*    const _interval = setInterval(() => {
       setLoading(true)
       fetchTeamStats(selectedTeam).then(data => {
         setStats(data)
@@ -36,7 +36,7 @@ function Dashboard() {
       })
     }, 10000)
 
-  }, [autoRefresh, selectedTeam])
+  }, [autoRefresh, selectedTeam])  */
 
   const handleTeamChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newTeam = event.target.value
