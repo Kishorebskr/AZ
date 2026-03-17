@@ -6,10 +6,60 @@ on:
       - main
       - develop
 
+env:
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+
 jobs:
+
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install Gradle 8.5
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip -P /tmp
+          unzip -q /tmp/gradle-8.5-bin.zip -d /opt/gradle
+          echo "/opt/gradle/gradle-8.5/bin" >> $GITHUB_PATH
+
+      - name: Run backend tests
+        run: |
+          cd backend
+          gradle test --no-daemon
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
 
   build-and-push:
     name: Build and Push Images
+    needs: [backend-test, frontend-build]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,9 +77,7 @@ jobs:
       - name: Set image tag
         id: meta
         run: |
-          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          IMAGE_PREFIX="ghcr.io/${OWNER}"
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "tag=stable" >> $GITHUB_OUTPUT
             echo "extra_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
@@ -37,23 +85,22 @@ jobs:
             echo "tag=latest" >> $GITHUB_OUTPUT
             echo "extra_tag=dev-${SHORT_SHA}" >> $GITHUB_OUTPUT
           fi
-          echo "image_prefix=${IMAGE_PREFIX}" >> $GITHUB_OUTPUT
 
       - name: Build and push backend image
         run: |
-          docker build -t ${{ steps.meta.outputs.image_prefix }}/backend:${{ steps.meta.outputs.tag }} \
-                       -t ${{ steps.meta.outputs.image_prefix }}/backend:${{ steps.meta.outputs.extra_tag }} \
+          docker build -t ${{ env.IMAGE_PREFIX }}/backend:${{ steps.meta.outputs.tag }} \
+                       -t ${{ env.IMAGE_PREFIX }}/backend:${{ steps.meta.outputs.extra_tag }} \
                        ./backend
-          docker push ${{ steps.meta.outputs.image_prefix }}/backend:${{ steps.meta.outputs.tag }}
-          docker push ${{ steps.meta.outputs.image_prefix }}/backend:${{ steps.meta.outputs.extra_tag }}
+          docker push ${{ env.IMAGE_PREFIX }}/backend:${{ steps.meta.outputs.tag }}
+          docker push ${{ env.IMAGE_PREFIX }}/backend:${{ steps.meta.outputs.extra_tag }}
 
       - name: Build and push frontend image
         run: |
-          docker build -t ${{ steps.meta.outputs.image_prefix }}/frontend:${{ steps.meta.outputs.tag }} \
-                       -t ${{ steps.meta.outputs.image_prefix }}/frontend:${{ steps.meta.outputs.extra_tag }} \
+          docker build -t ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.meta.outputs.tag }} \
+                       -t ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.meta.outputs.extra_tag }} \
                        ./frontend
-          docker push ${{ steps.meta.outputs.image_prefix }}/frontend:${{ steps.meta.outputs.tag }}
-          docker push ${{ steps.meta.outputs.image_prefix }}/frontend:${{ steps.meta.outputs.extra_tag }}
+          docker push ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.meta.outputs.tag }}
+          docker push ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.meta.outputs.extra_tag }}
 
   deploy-dev:
     name: Deploy to Dev
