@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the full DevOps setup for the **Team Portal** application — a web app for managing team performance metrics built with:
+This repository contains the full DevOps setup for the **Team Portal** application — a web app for managing team performance metrics built with::
 
 - **Backend:** Spring Boot 3 + Kotlin, H2 in-memory DB, exposes REST API at `/api`
 - **Frontend:** React 18 + TypeScript + Vite, served via Nginx
